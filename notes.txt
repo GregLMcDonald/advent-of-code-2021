@@ -1,0 +1,8 @@
+2021
+Day 11
+- learned that Array.new(3, Array.new(3, 0)) will create array in which each of the three "rows" is the same array
+- to ensure they are unique objects, pass block to new Array.new(3) { Array.new(3,0) }
+- https://www.mrinmoydas.com/blog/2021/09/04/ruby-2D-array-assignment-gotcha.html
+- https://docs.ruby-lang.org/en/3.0.0/Array.html
+
+- to sum elements of array :  array.reduce(:+)    or array.inject(0) { |sum, n| sum + n }
