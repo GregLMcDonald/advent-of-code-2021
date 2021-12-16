@@ -1,49 +1,39 @@
 #! /usr/bin/env ruby
-is_test = false
+is_test = true
 filename = is_test ? "test.txt" : "data.txt"
 rules = {}
 File.open(filename).readlines(chomp: true).map { |line| line.match(/(?<pair>[A-Z][A-Z]) -> (?<insert>[A-Z])/) }.each { |match_data| rules[match_data[:pair]] = match_data[:insert] }
-start = is_test ? "NNCB" : "BCHCKFFHSKPBSNVVKVSK"
+# polymer_template = is_test ? "NNCB" : "BCHCKFFHSKPBSNVVKVSK"
+polymer_template = "NN"
 
 frequency_table = {}
 
-possible_letters = start.chars + rules.values
+possible_letters = polymer_template.chars + rules.values
 possible_letters.uniq!.sort
 possible_letters.each { |letter| frequency_table[letter] = 0 }
+polymer_template.chars.each { |char| frequency_table[char] += 1}
 
-pp frequency_table.keys
-puts frequency_table.keys.size
-
-puts rules.keys.size
-
-
-def do_insertion(polymer, rules, frequency_table)
-  head = polymer[0]
-  frequency_table[head] += 1
-
-  tail = polymer[1, polymer.length]
-  pair = [head, tail[0]].join
-  insert = rules[pair]
-  # result = []
-  # polymer = polymer.chars
-  # while polymer.length > 1
-  #   first = polymer.shift
-  #   first_pair = [first, polymer.first].join
-  #   insertion = rules[first_pair]
-  #   if insertion != nil
-  #     result << first
-  #     result << insertion
-  #   else
-  #     result << first
-  #   end
-  # end
-  # result << polymer
-  # result.join
+def insert(template, depth, max_depth, frequency_table, rules)
+  # puts "template: #{template}"
+  starts = template[0, (template.size - 1)]
+  ends = template[1, template.size]
+  pairs = starts.chars.zip(ends.chars)
+  pairs.each_with_index do |pair, index|
+    pattern = pair.join
+    insertion = rules[pattern]
+    frequency_table[insertion] += 1
+    local_depth = depth + 1
+    new_template = [pair[0], insertion, pair[1]].join
+    # puts new_template
+    if depth < max_depth
+      frequency_table = insert(new_template, local_depth, max_depth, frequency_table, rules)
+    end
+  end
   frequency_table
 end
-frequency_table = do_insertion(start, rules, frequency_table)
 
-
+frequency_table = insert(polymer_template, 0, 20, frequency_table,  rules)
+pp frequency_table
 nb_iterations = 40
 
 least_common_letter = frequency_table.keys.first
