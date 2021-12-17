@@ -1,40 +1,73 @@
 #! /usr/bin/env ruby
-is_test = true
+is_test = false
 filename = is_test ? "test.txt" : "data.txt"
 rules = {}
 File.open(filename).readlines(chomp: true).map { |line| line.match(/(?<pair>[A-Z][A-Z]) -> (?<insert>[A-Z])/) }.each { |match_data| rules[match_data[:pair]] = match_data[:insert] }
-# polymer_template = is_test ? "NNCB" : "BCHCKFFHSKPBSNVVKVSK"
-polymer_template = "NN"
+polymer_template = is_test ? "NNCB" : "BCHCKFFHSKPBSNVVKVSK"
 
-frequency_table = {}
-
-possible_letters = polymer_template.chars + rules.values
-possible_letters.uniq!.sort
-possible_letters.each { |letter| frequency_table[letter] = 0 }
-polymer_template.chars.each { |char| frequency_table[char] += 1}
-
-def insert(template, depth, max_depth, frequency_table, rules)
-  # puts "template: #{template}"
-  starts = template[0, (template.size - 1)]
-  ends = template[1, template.size]
-  pairs = starts.chars.zip(ends.chars)
-  pairs.each_with_index do |pair, index|
-    pattern = pair.join
-    insertion = rules[pattern]
-    frequency_table[insertion] += 1
-    local_depth = depth + 1
-    new_template = [pair[0], insertion, pair[1]].join
-    # puts new_template
-    if depth < max_depth
-      frequency_table = insert(new_template, local_depth, max_depth, frequency_table, rules)
-    end
+class Dude
+  def initialize(max_depth, rules)
+    @max_depth = max_depth
+    @rules = rules
+    @tables = {}
   end
-  frequency_table
+
+  def combine_tables(a, b)
+    result = {}
+    keys = (a.keys + b.keys).flatten.uniq
+    keys.each do |key|
+      a_val = a[key] || 0
+      b_val = b[key] || 0
+      result[key] = a_val + b_val
+    end
+    result
+  end
+
+  def frequencies(template)
+    result = {}
+    template.chars.each { |char| result[char] = result[char] == nil ? 1 : result[char] + 1 }
+    result
+  end
+
+  def build_pairs(template)
+    starts = template[0, (template.size - 1)]
+    ends = template[1, template.size]
+    pairs = starts.chars.zip(ends.chars).map(&:join)
+  end
+
+  def wowser(depth, pair)
+    dd = @max_depth - depth
+    result = {}
+    return result if dd == 0
+    return @tables[pair][dd] if @tables[pair] && @tables[pair][dd]
+
+    insertion = @rules[pair]
+    result[insertion] = 1
+    return result if dd == 1
+
+    new_template = [pair[0], insertion, pair[1]].join
+    build_pairs(new_template).each do |pair|
+      result = combine_tables(result, wowser(depth + 1, pair))
+    end
+    @tables[pair] ||= {}
+    @tables[pair][dd] = result
+    result
+  end
+
+  def awesomeness(depth, template)
+    result = frequencies(template)
+    starts = template[0, (template.size - 1)]
+    ends = template[1, template.size]
+    pairs = starts.chars.zip(ends.chars)
+    pairs.each do |pair|
+      result = combine_tables(result, wowser(depth, pair.join))
+    end
+    result
+  end
 end
 
-frequency_table = insert(polymer_template, 0, 20, frequency_table,  rules)
-pp frequency_table
-nb_iterations = 40
+dude = Dude.new(40, rules)
+frequency_table = dude.awesomeness(0, polymer_template)
 
 least_common_letter = frequency_table.keys.first
 least_common_count = frequency_table[least_common_letter]
