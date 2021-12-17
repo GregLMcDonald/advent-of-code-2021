@@ -89,3 +89,15 @@ puts "#{most_common_letter}: #{most_common_count}"
 puts most_common_count - least_common_count
 
 
+# saw this way here with minmax() and reduce()
+# https://github.com/damyvv/advent-of-code-2021/blob/master/solutions/day14.rb
+# 19 LOC both parts!
+puts frequency_table.values.minmax.reduce(:-).abs
+
+# getting pairs usin each_cons()!!
+pp "ABCD".chars.each_cons(2).map { |a| a.join }
+# ["AB", "BC", "CD"]
+
+# use of tally() to get frequency; tally introduced in ruby 2.7
+pp "AAABBC".chars.tally
+# {"A"=>3, "B"=>2, "C"=>1}
